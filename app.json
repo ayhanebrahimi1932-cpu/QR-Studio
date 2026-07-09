@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "QR-Studio",
+    "slug": "QR-Studio",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.ayhaneb1932.QRStudio"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-sharing",
+      "expo-font",
+      "expo-splash-screen",
+      "expo-localization",
+      "expo-status-bar"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "1383d97a-7cec-47b1-8f37-76eba65aa338"
+      }
+    }
+  }
+}

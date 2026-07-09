@@ -1,0 +1,6 @@
+html, body, #root {
+  background: linear-gradient(135deg, #e8f0e4, #d4e8d0, #f0ece0, #dce8e4) !important;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
