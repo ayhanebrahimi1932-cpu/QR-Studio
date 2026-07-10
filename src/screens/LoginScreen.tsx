@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from '../components/ui/Button';
 import { colors, spacing, radius, shadows, textStyles } from '../theme';
 
@@ -8,10 +9,15 @@ interface Props { onComplete: () => void; }
 export function LoginScreen({ onComplete }: Props) {
   const [phone, setPhone] = useState('');
 
-  const handleLogin = () => {
-    if (phone.length < 10) { Alert.alert('Error', 'Enter valid phone'); return; }
-    localStorage.setItem('user', JSON.stringify({ phone, firstName: '', lastName: '' }));
-    onComplete();
+  const handleLogin = async () => {
+    const clean = phone.replace(/[^+\d]/g, '');
+    if (clean.length < 7) { Alert.alert('Error', 'Enter a valid phone number'); return; }
+    try {
+      await AsyncStorage.setItem('user', JSON.stringify({ phone: clean, firstName: '', lastName: '' }));
+      onComplete();
+    } catch(e) {
+      Alert.alert('Error', 'Could not save. Try again.');
+    }
   };
 
   return (
@@ -19,10 +25,14 @@ export function LoginScreen({ onComplete }: Props) {
       <Text style={styles.emoji}>📱</Text>
       <Text style={styles.title}>Welcome to QR Studio</Text>
       <Text style={styles.subtitle}>Enter your phone number</Text>
-      <View style={styles.inputBox}>
-        <Text style={styles.prefix}>+98</Text>
-        <TextInput style={styles.input} value={phone} onChangeText={setPhone} placeholder="912 345 6789" placeholderTextColor={colors.textTertiary} keyboardType="phone-pad" maxLength={10} />
-      </View>
+      <TextInput
+        style={styles.input}
+        value={phone}
+        onChangeText={setPhone}
+        placeholder="+1 234 567 8900"
+        placeholderTextColor={colors.textTertiary}
+        keyboardType="phone-pad"
+      />
       <Button title="Continue →" onPress={handleLogin} variant="primary" size="lg" fullWidth />
       <Text style={styles.disclaimer}>Stored locally only</Text>
     </View>
@@ -34,8 +44,6 @@ const styles = StyleSheet.create({
   emoji: { fontSize: 64 },
   title: { ...textStyles.h2, color: colors.textPrimary, textAlign: 'center' },
   subtitle: { ...textStyles.body, color: colors.textSecondary, textAlign: 'center' },
-  inputBox: { flexDirection: 'row', width: '100%', backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, overflow: 'hidden', ...shadows.sm },
-  prefix: { paddingHorizontal: spacing.base, paddingVertical: spacing.md, fontWeight: '600', color: colors.primary[500], borderRightWidth: 1, borderRightColor: colors.borderLight },
-  input: { flex: 1, paddingHorizontal: spacing.base, paddingVertical: spacing.md, fontSize: 16, color: colors.textPrimary },
+  input: { width: '100%', backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: radius.lg, paddingHorizontal: spacing.base, paddingVertical: spacing.md, fontSize: 18, color: colors.textPrimary, textAlign: 'center', ...shadows.sm },
   disclaimer: { ...textStyles.caption, color: colors.textTertiary },
 });

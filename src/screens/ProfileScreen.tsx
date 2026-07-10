@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from '../components/ui/Button';
 import { colors, spacing, radius, shadows, textStyles } from '../theme';
 
@@ -9,12 +10,12 @@ export function ProfileScreen({ onComplete }: Props) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim()) { Alert.alert('Error', 'Fill all fields'); return; }
-    const data = JSON.parse(localStorage.getItem('user') || '{}');
+    const data = JSON.parse(await AsyncStorage.getItem('user') || '{}');
     data.firstName = firstName.trim();
     data.lastName = lastName.trim();
-    localStorage.setItem('user', JSON.stringify(data));
+    await AsyncStorage.setItem('user', JSON.stringify(data));
     onComplete();
   };
 

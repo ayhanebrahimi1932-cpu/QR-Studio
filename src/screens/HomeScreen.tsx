@@ -3,12 +3,14 @@ import { View, Text, TextInput, ScrollView, StyleSheet, Alert, Dimensions, Platf
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import QRCode from 'react-native-qrcode-svg';
 import ViewShot from 'react-native-view-shot';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLanguage } from '../hooks/useLanguage';
 import { useQRGenerator } from '../hooks/useQRGenerator';
 import { Button } from '../components/ui/Button';
 import { Chip } from '../components/ui/Chip';
 import { QRColorCustomizer } from '../components/qr/QRColorCustomizer';
 import { QRLogoUploader } from '../components/qr/QRLogoUploader';
+import { GreenBackground } from '../components/ui/GreenBackground';
 import { colors, spacing, radius, shadows, textStyles } from '../theme';
 
 const QR_TYPES = [
@@ -28,44 +30,18 @@ export function HomeScreen() {
   const viewShotRef = useRef<ViewShot>(null);
   const [userName, setUserName] = useState('');
   const [showCustomize, setShowCustomize] = useState(false);
-  const {
-    type, setType, content, setContent,
-    wifiPassword, setWifiPassword, wifiHidden, setWifiHidden,
-    foregroundColor, setForegroundColor,
-    backgroundColor, setBackgroundColor,
-    logoUri, setLogoUri, formattedContent,
-  } = useQRGenerator();
+  const { type, setType, content, setContent, wifiPassword, setWifiPassword, foregroundColor, setForegroundColor, backgroundColor, setBackgroundColor, logoUri, setLogoUri, formattedContent } = useQRGenerator();
 
   useEffect(() => {
-    const data = localStorage.getItem('user');
-    if (data) {
-      try {
-        const user = JSON.parse(data);
-        setUserName(user.firstName || '');
-      } catch(e) {}
-    }
+    AsyncStorage.getItem('user').then(data => {
+      if (data) {
+        try { const user = JSON.parse(data); setUserName(user.firstName || ''); } catch(e) {}
+      }
+    });
   }, []);
-
-  const saveToHistory = (qrData: any) => {
-    const history = JSON.parse(localStorage.getItem('qr_history') || '[]');
-    const updated = [qrData, ...history].slice(0, 50);
-    localStorage.setItem('qr_history', JSON.stringify(updated));
-  };
 
   const handleSave = useCallback(async () => {
     if (!formattedContent.trim()) { Alert.alert('Error', 'Enter content first'); return; }
-    
-    const qrData = {
-      id: Date.now().toString(),
-      type,
-      content,
-      formattedContent,
-      foregroundColor,
-      backgroundColor,
-      createdAt: new Date().toLocaleString(),
-    };
-    saveToHistory(qrData);
-
     if (IS_WEB) {
       try {
         const uri = await viewShotRef.current?.capture?.();
@@ -80,12 +56,13 @@ export function HomeScreen() {
       const uri = await viewShotRef.current?.capture?.();
       if (uri) { await ML.saveToLibraryAsync(uri); Alert.alert('Saved!', 'QR saved to gallery'); }
     } catch (e) { Alert.alert('Error', String(e)); }
-  }, [formattedContent, type, content, foregroundColor, backgroundColor]);
+  }, [formattedContent]);
 
   const isValid = formattedContent.trim().length > 0;
 
   return (
     <View style={styles.container}>
+      <GreenBackground />
       <View style={{ paddingTop: IS_WEB ? 20 : insets.top, flex: 1 }}>
         <View style={styles.header}>
           <Text style={styles.greeting}>Hey, {userName || 'there'}! 👋</Text>
@@ -93,23 +70,18 @@ export function HomeScreen() {
         </View>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollInner} showsVerticalScrollIndicator={false}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.chipsRow}>
-            {QR_TYPES.map(({ key, icon }) => (
-              <Chip key={key} label={`${icon} ${t.types[key]}`} selected={type === key} onPress={() => setType(key)} />
-            ))}
+            {QR_TYPES.map(({ key, icon }) => <Chip key={key} label={`${icon} ${t.types[key]}`} selected={type === key} onPress={() => setType(key)} />)}
           </ScrollView>
-
           <View style={styles.inputBox}>
             <Text style={styles.label}>{type === 'wifi' ? 'Network Name (SSID)' : 'Content'}</Text>
-            <TextInput style={styles.input} value={content} onChangeText={setContent} placeholder={type === 'wifi' ? 'MyWiFi' : 'Enter content...'} placeholderTextColor={colors.textTertiary} multiline={type === 'text'} numberOfLines={type === 'text' ? 4 : 1} keyboardType={type === 'phone' || type === 'sms' ? 'phone-pad' : 'default'} />
+            <TextInput style={styles.input} value={content} onChangeText={setContent} placeholder={type === 'wifi' ? 'MyWiFi' : 'Enter content...'} placeholderTextColor={colors.textTertiary} multiline={type === 'text'} numberOfLines={type === 'text' ? 4 : 1} />
           </View>
-
           {type === 'wifi' && (
             <View style={styles.inputBox}>
               <Text style={styles.label}>Password (empty = open)</Text>
               <TextInput style={styles.input} value={wifiPassword} onChangeText={setWifiPassword} placeholder="Leave empty for no password" placeholderTextColor={colors.textTertiary} />
             </View>
           )}
-
           <View style={styles.qrBox}>
             <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
               <View style={[styles.qrWrap, { backgroundColor }]}>
@@ -118,7 +90,6 @@ export function HomeScreen() {
             </ViewShot>
             {!isValid && <View style={styles.qrOverlay}><Text style={styles.qrOverlayText}>QR Preview</Text></View>}
           </View>
-
           <Button title="🎨 Customize" variant="ghost" onPress={() => setShowCustomize(!showCustomize)} icon={<Text>{showCustomize ? '🔽' : '▶️'}</Text>} />
           {showCustomize && (
             <View style={styles.panel}>
@@ -126,7 +97,6 @@ export function HomeScreen() {
               {!IS_WEB && <QRLogoUploader logoUri={logoUri} onLogoChange={setLogoUri} />}
             </View>
           )}
-
           <View style={styles.actions}>
             <Button title="💾 Download PNG" variant="primary" onPress={handleSave} disabled={!isValid} fullWidth />
           </View>
@@ -137,7 +107,7 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: 'transparent' },
   header: { paddingHorizontal: spacing.lg, paddingVertical: spacing.base },
   greeting: { ...textStyles.h2, color: colors.textPrimary },
   subtitle: { ...textStyles.bodySmall, color: colors.textSecondary, marginTop: spacing.xxs },

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../hooks/useLanguage';
 import { Button } from '../components/ui/Button';
 import { ScannerFrame } from '../components/scanner/ScannerFrame';
+import { GreenBackground } from '../components/ui/GreenBackground';
 import { colors, spacing, radius, textStyles } from '../theme';
 
 export function ScanScreen() {
@@ -25,6 +26,7 @@ export function ScanScreen() {
   if (!permission?.granted) {
     return (
       <View style={styles.permContainer}>
+        <GreenBackground />
         <Text style={styles.permIcon}>📷</Text>
         <Text style={styles.permTitle}>{t.scan.permission}</Text>
         <Button title={t.scan.grantPermission} onPress={requestPermission} variant="primary" />
@@ -34,6 +36,7 @@ export function ScanScreen() {
 
   return (
     <View style={styles.container}>
+      <GreenBackground />
       {!scanned ? (
         <CameraView style={styles.camera} facing="back" barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onBarcodeScanned={handleScan}>
           <View style={styles.overlay}>
