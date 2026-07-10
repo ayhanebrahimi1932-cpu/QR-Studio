@@ -34,14 +34,17 @@ export function HomeScreen() {
 
   useEffect(() => {
     AsyncStorage.getItem('user').then(data => {
-      if (data) {
-        try { const user = JSON.parse(data); setUserName(user.firstName || ''); } catch(e) {}
-      }
+      if (data) { try { const user = JSON.parse(data); setUserName(user.firstName || ''); } catch(e) {} }
     });
   }, []);
 
   const handleSave = useCallback(async () => {
     if (!formattedContent.trim()) { Alert.alert('Error', 'Enter content first'); return; }
+    
+    const history = JSON.parse(await AsyncStorage.getItem('qr_history') || '[]');
+    history.unshift({ id: Date.now().toString(), type, content: content.substring(0, 50), createdAt: new Date().toLocaleString() });
+    await AsyncStorage.setItem('qr_history', JSON.stringify(history.slice(0, 50)));
+
     if (IS_WEB) {
       try {
         const uri = await viewShotRef.current?.capture?.();
@@ -56,7 +59,7 @@ export function HomeScreen() {
       const uri = await viewShotRef.current?.capture?.();
       if (uri) { await ML.saveToLibraryAsync(uri); Alert.alert('Saved!', 'QR saved to gallery'); }
     } catch (e) { Alert.alert('Error', String(e)); }
-  }, [formattedContent]);
+  }, [formattedContent, type, content]);
 
   const isValid = formattedContent.trim().length > 0;
 
@@ -98,7 +101,7 @@ export function HomeScreen() {
             </View>
           )}
           <View style={styles.actions}>
-            <Button title="💾 Download PNG" variant="primary" onPress={handleSave} disabled={!isValid} fullWidth />
+            <Button title="💾 Save QR" variant="primary" onPress={handleSave} disabled={!isValid} fullWidth />
           </View>
         </ScrollView>
       </View>

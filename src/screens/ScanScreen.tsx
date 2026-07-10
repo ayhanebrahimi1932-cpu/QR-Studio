@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, Alert, Linking, TouchableOpacity } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Clipboard from 'expo-clipboard';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -46,6 +46,9 @@ export function ScanScreen() {
         </CameraView>
       ) : (
         <View style={[styles.resultContainer, { paddingTop: insets.top }]}>
+          <TouchableOpacity onPress={resetScan} style={styles.backBtn}>
+            <Text style={styles.backText}>← Back</Text>
+          </TouchableOpacity>
           <Text style={styles.resultTitle}>{t.scan.result}</Text>
           <View style={styles.resultBox}><Text style={styles.resultText} numberOfLines={5}>{result}</Text></View>
           <View style={styles.resultActions}>
@@ -68,6 +71,8 @@ const styles = StyleSheet.create({
   overlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   instruction: { ...textStyles.body, color: colors.white, marginTop: spacing.xxl, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: radius.full },
   resultContainer: { flex: 1, padding: spacing.lg, gap: spacing.lg, justifyContent: 'center' },
+  backBtn: { position: 'absolute', top: 10, left: 15, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, zIndex: 10 },
+  backText: { color: 'white', fontWeight: '600', fontSize: 14 },
   resultTitle: { ...textStyles.h2, color: colors.textPrimary, textAlign: 'center' },
   resultBox: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: spacing.lg, borderWidth: 1, borderColor: colors.border },
   resultText: { ...textStyles.body, color: colors.textPrimary, textAlign: 'center' },

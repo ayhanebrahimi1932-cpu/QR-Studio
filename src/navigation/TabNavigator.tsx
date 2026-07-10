@@ -33,9 +33,9 @@ const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: colors.white,
     borderTopWidth: 0,
-    height: Platform.OS === 'ios' ? 88 : 64,
-    paddingTop: spacing.sm,
-    paddingBottom: Platform.OS === 'ios' ? spacing.lg : spacing.sm,
+    height: 70,
+    paddingTop: 5,
+    paddingBottom: 15,
     ...shadows.lg,
   },
   tabLabel: { ...textStyles.tab },

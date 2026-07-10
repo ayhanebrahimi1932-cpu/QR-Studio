@@ -1,23 +1,28 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLanguage } from '../hooks/useLanguage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Card } from '../components/ui/Card';
 import { GreenBackground } from '../components/ui/GreenBackground';
 import { colors, spacing, textStyles } from '../theme';
 
 export function HistoryScreen() {
-  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
-  const history: any[] = [];
+  const [history, setHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('qr_history').then(data => {
+      if (data) setHistory(JSON.parse(data));
+    });
+  }, []);
 
   if (history.length === 0) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <GreenBackground />
-        <Text style={styles.title}>{t.history.title}</Text>
-        <EmptyState icon="📭" title={t.history.empty} description={t.history.emptyHint} />
+        <Text style={styles.title}>📋 History</Text>
+        <EmptyState icon="📭" title="No QR codes yet" description="Create your first QR!" />
       </View>
     );
   }
@@ -25,7 +30,7 @@ export function HistoryScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <GreenBackground />
-      <Text style={styles.title}>{t.history.title}</Text>
+      <Text style={styles.title}>📋 History</Text>
       <FlatList data={history} keyExtractor={item => item.id} renderItem={({ item }) => (
         <Card style={styles.card}>
           <Text style={styles.cardType}>{item.type}</Text>
