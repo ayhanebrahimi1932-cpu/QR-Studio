@@ -38,12 +38,23 @@ export function HomeScreen() {
     });
   }, []);
 
+  const saveToHistory = async () => {
+    try {
+      const history = JSON.parse(await AsyncStorage.getItem('qr_history') || '[]');
+      history.unshift({
+        id: Date.now().toString(),
+        type,
+        content: content.substring(0, 50),
+        createdAt: new Date().toLocaleString(),
+      });
+      await AsyncStorage.setItem('qr_history', JSON.stringify(history.slice(0, 50)));
+    } catch(e) {}
+  };
+
   const handleSave = useCallback(async () => {
     if (!formattedContent.trim()) { Alert.alert('Error', 'Enter content first'); return; }
     
-    const history = JSON.parse(await AsyncStorage.getItem('qr_history') || '[]');
-    history.unshift({ id: Date.now().toString(), type, content: content.substring(0, 50), createdAt: new Date().toLocaleString() });
-    await AsyncStorage.setItem('qr_history', JSON.stringify(history.slice(0, 50)));
+    await saveToHistory();
 
     if (IS_WEB) {
       try {
@@ -53,7 +64,7 @@ export function HomeScreen() {
       return;
     }
     try {
-      const ML = require('expo-media-library');
+      const ML = require('expo-media-library/legacy');
       const { status } = await ML.requestPermissionsAsync();
       if (status !== 'granted') { Alert.alert('Error', 'Permission needed'); return; }
       const uri = await viewShotRef.current?.capture?.();

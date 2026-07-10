@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Card } from '../components/ui/Card';
@@ -11,11 +12,13 @@ export function HistoryScreen() {
   const insets = useSafeAreaInsets();
   const [history, setHistory] = useState<any[]>([]);
 
-  useEffect(() => {
-    AsyncStorage.getItem('qr_history').then(data => {
-      if (data) setHistory(JSON.parse(data));
-    });
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      AsyncStorage.getItem('qr_history').then(data => {
+        if (data) setHistory(JSON.parse(data));
+      });
+    }, [])
+  );
 
   if (history.length === 0) {
     return (
@@ -31,13 +34,18 @@ export function HistoryScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <GreenBackground />
       <Text style={styles.title}>📋 History</Text>
-      <FlatList data={history} keyExtractor={item => item.id} renderItem={({ item }) => (
-        <Card style={styles.card}>
-          <Text style={styles.cardType}>{item.type}</Text>
-          <Text style={styles.cardContent} numberOfLines={1}>{item.content}</Text>
-          <Text style={styles.cardDate}>{item.createdAt}</Text>
-        </Card>
-      )} contentContainerStyle={styles.list} />
+      <FlatList
+        data={history}
+        keyExtractor={item => item.id}
+        renderItem={({ item }) => (
+          <Card style={styles.card}>
+            <Text style={styles.cardType}>{item.type}</Text>
+            <Text style={styles.cardContent} numberOfLines={1}>{item.content}</Text>
+            <Text style={styles.cardDate}>{item.createdAt}</Text>
+          </Card>
+        )}
+        contentContainerStyle={styles.list}
+      />
     </View>
   );
 }

@@ -2,79 +2,102 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, Linking, TouchableOpacity } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Clipboard from 'expo-clipboard';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLanguage } from '../hooks/useLanguage';
 import { Button } from '../components/ui/Button';
 import { ScannerFrame } from '../components/scanner/ScannerFrame';
 import { GreenBackground } from '../components/ui/GreenBackground';
 import { colors, spacing, radius, textStyles } from '../theme';
 
 export function ScanScreen() {
-  const { t } = useLanguage();
-  const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [result, setResult] = useState('');
 
-  useEffect(() => { if (!permission?.granted) requestPermission(); }, []);
+  useEffect(() => {
+    if (!permission?.granted) requestPermission();
+  }, []);
 
-  const handleScan = ({ data }: { data: string }) => { if (scanned) return; setScanned(true); setResult(data); };
-  const handleCopy = async () => { await Clipboard.setStringAsync(result); Alert.alert(t.common.success, t.alerts.copied); };
-  const handleOpen = () => { if (result.startsWith('http')) Linking.openURL(result); else Alert.alert(t.scan.result, result); };
-  const resetScan = () => { setScanned(false); setResult(''); };
+  const handleScan = ({ data }: { data: string }) => {
+    if (scanned) return;
+    setScanned(true);
+    setResult(data);
+  };
+
+  const handleCopy = async () => {
+    await Clipboard.setStringAsync(result);
+    Alert.alert('Copied!', result);
+  };
+
+  const handleOpen = () => {
+    if (result.startsWith('http')) Linking.openURL(result);
+    else Alert.alert('Result', result);
+  };
+
+  const resetScan = () => {
+    setScanned(false);
+    setResult('');
+  };
 
   if (!permission?.granted) {
     return (
       <View style={styles.permContainer}>
         <GreenBackground />
         <Text style={styles.permIcon}>📷</Text>
-        <Text style={styles.permTitle}>{t.scan.permission}</Text>
-        <Button title={t.scan.grantPermission} onPress={requestPermission} variant="primary" />
+        <Text style={styles.permTitle}>Camera permission needed</Text>
+        <Button title="Grant Permission" onPress={requestPermission} variant="primary" />
+      </View>
+    );
+  }
+
+  if (scanned) {
+    return (
+      <View style={styles.resultContainer}>
+        <GreenBackground />
+        <TouchableOpacity onPress={resetScan} style={styles.backBtn}>
+          <Text style={styles.backText}>← Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.resultTitle}>Scan Result</Text>
+        <View style={styles.resultBox}>
+          <Text style={styles.resultText} numberOfLines={5}>{result}</Text>
+        </View>
+        <View style={styles.resultActions}>
+          <Button title="📋 Copy" onPress={handleCopy} variant="secondary" />
+          <Button title="🔗 Open" onPress={handleOpen} variant="primary" />
+          <Button title="🔄 Scan Again" onPress={resetScan} variant="ghost" />
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <GreenBackground />
-      {!scanned ? (
-        <CameraView style={styles.camera} facing="back" barcodeScannerSettings={{ barcodeTypes: ['qr'] }} onBarcodeScanned={handleScan}>
-          <View style={styles.overlay}>
-            <ScannerFrame />
-            <Text style={styles.instruction}>{t.scan.instruction}</Text>
-          </View>
-        </CameraView>
-      ) : (
-        <View style={[styles.resultContainer, { paddingTop: insets.top }]}>
-          <TouchableOpacity onPress={resetScan} style={styles.backBtn}>
-            <Text style={styles.backText}>← Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.resultTitle}>{t.scan.result}</Text>
-          <View style={styles.resultBox}><Text style={styles.resultText} numberOfLines={5}>{result}</Text></View>
-          <View style={styles.resultActions}>
-            <Button title={t.scan.copy} onPress={handleCopy} variant="secondary" icon={<Text>📋</Text>} />
-            <Button title={t.scan.open} onPress={handleOpen} variant="primary" icon={<Text>🔗</Text>} />
-            <Button title={t.common.back} onPress={resetScan} variant="ghost" />
-          </View>
+      <CameraView
+        style={styles.camera}
+        facing="back"
+        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+        onBarcodeScanned={handleScan}
+      >
+        <View style={styles.overlay}>
+          <ScannerFrame />
+          <Text style={styles.instruction}>Point camera at QR code</Text>
         </View>
-      )}
+      </CameraView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'transparent' },
-  permContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent', gap: spacing.lg, padding: spacing.xl },
-  permIcon: { fontSize: 64 },
-  permTitle: { ...textStyles.h3, color: colors.textPrimary, textAlign: 'center' },
+  container: { flex: 1 },
   camera: { flex: 1 },
   overlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  instruction: { ...textStyles.body, color: colors.white, marginTop: spacing.xxl, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: radius.full },
-  resultContainer: { flex: 1, padding: spacing.lg, gap: spacing.lg, justifyContent: 'center' },
-  backBtn: { position: 'absolute', top: 10, left: 15, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, zIndex: 10 },
+  instruction: { color: 'white', marginTop: 50, backgroundColor: 'rgba(0,0,0,0.6)', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, fontSize: 14 },
+  permContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 20, padding: 40 },
+  permIcon: { fontSize: 64 },
+  permTitle: { fontSize: 18, color: colors.textPrimary, textAlign: 'center' },
+  resultContainer: { flex: 1, padding: 24, gap: 16, justifyContent: 'center' },
+  backBtn: { position: 'absolute', top: 50, left: 20, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, zIndex: 10 },
   backText: { color: 'white', fontWeight: '600', fontSize: 14 },
-  resultTitle: { ...textStyles.h2, color: colors.textPrimary, textAlign: 'center' },
-  resultBox: { backgroundColor: colors.surface, borderRadius: radius.xl, padding: spacing.lg, borderWidth: 1, borderColor: colors.border },
-  resultText: { ...textStyles.body, color: colors.textPrimary, textAlign: 'center' },
-  resultActions: { gap: spacing.md },
+  resultTitle: { fontSize: 24, fontWeight: '700', color: colors.textPrimary, textAlign: 'center' },
+  resultBox: { backgroundColor: 'white', borderRadius: 16, padding: 20, borderWidth: 1, borderColor: '#E0E0E0' },
+  resultText: { fontSize: 16, color: colors.textPrimary, textAlign: 'center' },
+  resultActions: { gap: 12 },
 });
