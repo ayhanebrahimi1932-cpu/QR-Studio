@@ -30,7 +30,14 @@ export function HomeScreen() {
   const viewShotRef = useRef<ViewShot>(null);
   const [userName, setUserName] = useState('');
   const [showCustomize, setShowCustomize] = useState(false);
-  const { type, setType, content, setContent, wifiPassword, setWifiPassword, foregroundColor, setForegroundColor, backgroundColor, setBackgroundColor, logoUri, setLogoUri, formattedContent } = useQRGenerator();
+  const {
+    type, setType, content, setContent,
+    wifiPassword, setWifiPassword,
+    smsMessage, setSmsMessage,
+    foregroundColor, setForegroundColor,
+    backgroundColor, setBackgroundColor,
+    logoUri, setLogoUri, formattedContent,
+  } = useQRGenerator();
 
   useEffect(() => {
     AsyncStorage.getItem('user').then(data => {
@@ -86,31 +93,61 @@ export function HomeScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.chipsRow}>
             {QR_TYPES.map(({ key, icon }) => <Chip key={key} label={`${icon} ${t.types[key]}`} selected={type === key} onPress={() => setType(key)} />)}
           </ScrollView>
+
           <View style={styles.inputBox}>
-            <Text style={styles.label}>{type === 'wifi' ? 'Network Name (SSID)' : 'Content'}</Text>
-            <TextInput style={styles.input} value={content} onChangeText={setContent} placeholder={type === 'wifi' ? 'MyWiFi' : 'Enter content...'} placeholderTextColor={colors.textTertiary} multiline={type === 'text'} numberOfLines={type === 'text' ? 4 : 1} />
+            <Text style={styles.label}>
+              {type === 'wifi' ? 'Network Name (SSID)' : 
+               type === 'sms' ? 'Phone Number' : 'Content'}
+            </Text>
+            <TextInput style={styles.input} value={content} onChangeText={setContent} 
+              placeholder={
+                type === 'wifi' ? 'MyWiFi' : 
+                type === 'sms' ? '+989123456789' : 'Enter content...'
+              } 
+              placeholderTextColor={colors.textTertiary} 
+              multiline={type === 'text'} 
+              numberOfLines={type === 'text' ? 4 : 1} 
+            />
           </View>
+
+          {type === 'sms' && (
+            <View style={styles.inputBox}>
+              <Text style={styles.label}>Message (optional)</Text>
+              <TextInput style={styles.input} value={smsMessage} onChangeText={setSmsMessage} 
+                placeholder="Your message here..." placeholderTextColor={colors.textTertiary} 
+                multiline numberOfLines={3} />
+            </View>
+          )}
+
           {type === 'wifi' && (
             <View style={styles.inputBox}>
               <Text style={styles.label}>Password (empty = open)</Text>
-              <TextInput style={styles.input} value={wifiPassword} onChangeText={setWifiPassword} placeholder="Leave empty for no password" placeholderTextColor={colors.textTertiary} />
+              <TextInput style={styles.input} value={wifiPassword} onChangeText={setWifiPassword} 
+                placeholder="Leave empty for no password" placeholderTextColor={colors.textTertiary} />
             </View>
           )}
+
           <View style={styles.qrBox}>
             <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
               <View style={[styles.qrWrap, { backgroundColor }]}>
-                <QRCode value={formattedContent || ' '} size={QR_SIZE} color={foregroundColor} backgroundColor={backgroundColor} logo={logoUri ? { uri: logoUri } : undefined} logoSize={logoUri ? 50 : 0} logoBackgroundColor={backgroundColor} logoBorderRadius={radius.md} />
+                <QRCode value={formattedContent || ' '} size={QR_SIZE} color={foregroundColor} backgroundColor={backgroundColor} 
+                  logo={logoUri ? { uri: logoUri } : undefined} logoSize={logoUri ? 50 : 0} 
+                  logoBackgroundColor={backgroundColor} logoBorderRadius={radius.md} />
               </View>
             </ViewShot>
             {!isValid && <View style={styles.qrOverlay}><Text style={styles.qrOverlayText}>QR Preview</Text></View>}
           </View>
-          <Button title="🎨 Customize" variant="ghost" onPress={() => setShowCustomize(!showCustomize)} icon={<Text>{showCustomize ? '🔽' : '▶️'}</Text>} />
+
+          <Button title="🎨 Customize" variant="ghost" onPress={() => setShowCustomize(!showCustomize)} 
+            icon={<Text>{showCustomize ? '🔽' : '▶️'}</Text>} />
           {showCustomize && (
             <View style={styles.panel}>
-              <QRColorCustomizer foregroundColor={foregroundColor} backgroundColor={backgroundColor} onForegroundChange={setForegroundColor} onBackgroundChange={setBackgroundColor} />
+              <QRColorCustomizer foregroundColor={foregroundColor} backgroundColor={backgroundColor} 
+                onForegroundChange={setForegroundColor} onBackgroundChange={setBackgroundColor} />
               {!IS_WEB && <QRLogoUploader logoUri={logoUri} onLogoChange={setLogoUri} />}
             </View>
           )}
+
           <View style={styles.actions}>
             <Button title="💾 Save QR" variant="primary" onPress={handleSave} disabled={!isValid} fullWidth />
           </View>

@@ -6,6 +6,7 @@ export function useQRGenerator() {
   const [content, setContent] = useState('');
   const [wifiPassword, setWifiPassword] = useState('');
   const [wifiHidden, setWifiHidden] = useState(false);
+  const [smsMessage, setSmsMessage] = useState('');
   const [foregroundColor, setForegroundColor] = useState('#000000');
   const [backgroundColor, setBackgroundColor] = useState('#FFFFFF');
   const [size, setSize] = useState(200);
@@ -13,7 +14,7 @@ export function useQRGenerator() {
   const [logoUri, setLogoUri] = useState<string | undefined>();
   const qrRef = useRef<any>(null);
 
-  const formatContent = useCallback((t: QRType, raw: string, pass?: string, hidden?: boolean): string => {
+  const formatContent = useCallback((t: QRType, raw: string, pass?: string, hidden?: boolean, smsText?: string): string => {
     if (!raw.trim()) return '';
     switch (t) {
       case 'url':
@@ -23,7 +24,13 @@ export function useQRGenerator() {
       case 'email':
         return `mailto:${raw.trim()}`;
       case 'sms':
-        return `sms:${raw.replace(/[^+\d]/g, '')}`;
+        const phone = raw.replace(/[^+\d]/g, '');
+        const message = (smsText || '').trim();
+        if (message) {
+          return `SMSTO:${phone}:${message}`;
+        } else {
+          return `sms:${phone}`;
+        }
       case 'wifi':
         const ssid = raw.trim();
         const password = (pass || '').trim();
@@ -41,7 +48,7 @@ export function useQRGenerator() {
     }
   }, []);
 
-  const formattedContent = formatContent(type, content, wifiPassword, wifiHidden);
+  const formattedContent = formatContent(type, content, wifiPassword, wifiHidden, smsMessage);
 
   const generateQRData = useCallback((): QRCodeData => ({
     id: Date.now().toString(),
@@ -61,6 +68,7 @@ export function useQRGenerator() {
     content, setContent,
     wifiPassword, setWifiPassword,
     wifiHidden, setWifiHidden,
+    smsMessage, setSmsMessage,
     foregroundColor, setForegroundColor,
     backgroundColor, setBackgroundColor,
     size, setSize,
