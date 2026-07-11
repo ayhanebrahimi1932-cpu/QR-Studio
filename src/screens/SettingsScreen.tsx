@@ -13,7 +13,13 @@ export function SettingsScreen() {
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', onPress: async () => { await AsyncStorage.clear(); } },
+      { 
+        text: 'Logout', 
+        onPress: async () => { 
+          await AsyncStorage.clear();
+          Alert.alert('Logged out', 'Restart the app to see changes.');
+        } 
+      },
     ]);
   };
 
